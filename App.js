@@ -36,7 +36,7 @@ export default class App extends React.Component {
           </TextInput>
           { /* 기존 메모를 보여주는 부분 */ } 
           <ScrollView>
-            {Object.values(memos).reverse().map(memo => 
+            {Object.values(memos).sort(function (a,b) {return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; }).map(memo => 
               <Todo
                 key={memo.id}
                 deleteMemo={this._deleteMemo}
