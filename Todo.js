@@ -1,54 +1,78 @@
 import React from 'react';
 import { StyleSheet, Text, View, Dimensions, TextInput, ScrollView, TouchableOpacity } from 'react-native';
+import PropTypes from "prop-types";
 
 const {width, height} = Dimensions.get("screen");
 
 export default class App extends React.Component {
-  state = {
-    isCompleted: false,
-    isEditing: false
+  constructor(props) {
+    super(props);
+    this.state = { isEditing: false, editedText: props.text };
+  }
+
+  static propTypes = {
+    text: PropTypes.string.isRequired,
+    isCompleted: PropTypes.bool.isRequired,
+    id : PropTypes.string.isRequired,
+    deleteMemo: PropTypes.func.isRequired,
+    completeMemo: PropTypes.func.isRequired,
+    uncompleteMemo: PropTypes.func.isRequired,
+    updateMemo: PropTypes.func.isRequired
   }
   
   render() {
-    const {isEditing, isCompleted} = this.state;
-      return(
-          <View style={styles.container}>
-              <TouchableOpacity onPress={this._toggleComplete}>
-                <View style={[
-                  styles.circle,
-                  isCompleted ? styles.completed_circle : {}]}>
-                </View>
-              </TouchableOpacity>
-              {isEditing ? 
-                <TextInput
-                  style={styles.memo_text}
-                >     
-                </TextInput>
-                : <Text 
-                  style={[
-                    styles.memo_text,
-                    isCompleted ? styles.completed_text : {}]}
-                > {"리액트 네이티브 공부하기"} </Text>
-              }
-              {isEditing ?
-                <TouchableOpacity onPress={this._finishEditing}>
-                  <Text style={styles.completed_btn}>{"수정완료"}</Text>
-                </TouchableOpacity> :
-                <View style={styles.btn_container}>
-                  <TouchableOpacity onPress={this._startEditing}>
-                    <Text style={styles.edit_btn}>✒</Text>
-                  </TouchableOpacity>
+    const {isEditing, editedText} = this.state;
+    const {isCompleted, text, id, deleteMemo} = this.props;
+
+    return(
+        <View style={styles.container}>
+            <TouchableOpacity onPress={this._toggleComplete}>
+              <View style={[
+                styles.circle,
+                isCompleted ? styles.completed_circle : {}]}>
+              </View>
+            </TouchableOpacity>
+            {isEditing ? 
+              <TextInput
+                style={styles.memo_text}
+                value={editedText}
+                onChangeText={this._controllInput}
+                returnKeyType={"done"}
+              >     
+              </TextInput>
+              : <Text 
+                style={[
+                  styles.memo_text,
+                  isCompleted ? styles.completed_text : {}]}
+              > {text} </Text>
+            }
+            {isEditing ?
+              <TouchableOpacity onPress={this._finishEditing}>
+                <Text style={styles.completed_btn}>{"수정완료"}</Text>
+              </TouchableOpacity> :
+              <View style={styles.btn_container}>
+                <TouchableOpacity onPress={this._startEditing}>
+                  <Text style={styles.edit_btn}>✒</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => deleteMemo(id)}>
                   <Text style={styles.delete_btn}>🗑</Text>
-                </View>
-              }
-          </View>
-      
-      );
+                </TouchableOpacity>
+              </View>
+            }
+        </View>
+    
+    );
+  }
+
+  _controllInput = (text) => {
+    this.setState({
+      editedText: text
+    })
   }
 
   _toggleComplete = () => {
-    const {isCompleted} = this.state;
-    this.setState({isCompleted: !isCompleted});
+    const {id, isCompleted, completeMemo, uncompleteMemo} = this.props;
+    isCompleted ? uncompleteMemo(id) : completeMemo(id);
   }
 
   _startEditing = () => {
@@ -56,7 +80,13 @@ export default class App extends React.Component {
   }
 
   _finishEditing = () => {
-    this.setState({isEditing: false});
+    const {editedText} = this.state;
+    const {id, updateMemo} = this.props;
+
+    updateMemo(id, editedText);
+    this.setState({
+      isEditing: false
+    });
   }
 }
 
